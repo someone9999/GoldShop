@@ -1,6 +1,12 @@
 name: GoldShop
 main: com.brandonmabey.goldshop.Core
-version: 0.0.1
+version: 0.0.2
 description: >
              A gold shop plugin.
 commands:
+   lol:
+      description: This is a test command.
+      usage: /<command>
+      permission: <plugin name>.basic
+      permission-message: You don't have <permission>
+ 
