@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class Core extends JavaPlugin implements Listener{
@@ -47,6 +48,7 @@ public class Core extends JavaPlugin implements Listener{
 		
 	}
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent e) {
 		if (e.getClickedBlock() == null) {
@@ -154,9 +156,11 @@ public class Core extends JavaPlugin implements Listener{
 						p.getInventory().setItemInHand(null);
 					} else {
 						heldStack.setAmount(heldStack.getAmount() - priceBuy);
+						p.getInventory().setItemInHand(heldStack);
 					}
 					p.getInventory().addItem(new ItemStack(itemID, amountBuy));
 					p.sendMessage("Item purchased!");
+					p.updateInventory();
 					this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
 					
 					return;
@@ -191,17 +195,33 @@ public class Core extends JavaPlugin implements Listener{
 
 						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
 						p.sendMessage("Item Sold!");
-						this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
+						p.updateInventory();
+						this.getLogger().info("Player " + p.getDisplayName() + "sold " + itemLine[0]);
 						return;
 					}
 					
-					
+					p.sendMessage("Not enough " + itemLine[0] + " in inventory to sell");
 					this.getLogger().info("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
 			}
 			
 			
+		}
+	}
+	
+	@EventHandler
+	public void onSignChange(SignChangeEvent e) {
+		Player p = e.getPlayer();
+		
+		if (p.isOp()) {
+			return;
+		} else {
+			String line = e.getLine(0);
+			if (line.equalsIgnoreCase("[gold]")) {
+				e.setLine(0, "");
+				p.sendMessage("Need permission to create gold shop.");
+			}
 		}
 	}
 
