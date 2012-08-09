@@ -1,6 +1,7 @@
 package com.brandonmabey.goldshop;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.bukkit.Material;
@@ -170,25 +171,11 @@ public class Core extends JavaPlugin implements Listener{
 						return;
 					}
 						
-					HashMap<Integer, ? extends ItemStack> hm = p.getInventory().all(itemID);
-					for (int key : hm.keySet()) {
-						ItemStack inventoryItem = p.getInventory().getItem(key);
-						
-						if (inventoryItem.getAmount() < amountSell) {
-							continue;
-						}
-						
-						if (inventoryItem.getAmount() == amountSell) {
-							p.getInventory().setItem(key, null);
-						} else {
-							inventoryItem.setAmount(inventoryItem.getAmount() - amountSell);
-						}
-						
-
+					if (getItemIDWithAmount(itemID, amountSell, p)) {
+						p.sendMessage("Sold " + itemLine[0] + "!");
 						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
-						p.sendMessage("Item Sold!");
 						p.updateInventory();
-						this.getLogger().info("Player " + p.getDisplayName() + "sold " + itemLine[0]);
+						this.getLogger().info("Player " + p.getDisplayName() + " sold " + itemLine[0]);
 						return;
 					}
 					
@@ -200,6 +187,32 @@ public class Core extends JavaPlugin implements Listener{
 			
 			
 		}
+	}
+	
+	public boolean getItemIDWithAmount(int ID, int amount, Player p) {
+		ArrayList<Integer> spots = new ArrayList<Integer>();
+		
+		HashMap<Integer, ? extends ItemStack> hm = p.getInventory().all(ID);
+		for (int slotID : hm.keySet()) {
+			if (hm.get(slotID).getAmount() < amount) {
+				amount -= hm.get(slotID).getAmount();
+				spots.add(slotID);
+				continue;
+			} else {
+				for (int i = 0; i < spots.size(); i++) {
+					p.getInventory().setItem(spots.get(i), null);
+				}
+				if (hm.get(slotID).getAmount() == amount) {
+					p.getInventory().setItem(slotID, null);
+				} else {
+					p.getInventory().getItem(slotID).setAmount(p.getInventory().getItem(slotID).getAmount() - amount);
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	@EventHandler
