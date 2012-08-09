@@ -128,6 +128,10 @@ public class Core extends JavaPlugin implements Listener{
 				Player p = e.getPlayer();
 				if (leftClick) {
 					ItemStack heldStack = p.getInventory().getItemInHand();
+					if (heldStack == null) {
+						this.getLogger().warning("Player " + p.getDisplayName() + "tried to purchase itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
+						return;
+					}
 					
 					if (heldStack.getType() != CURRENCY) {
 						p.sendMessage("Wrong item in hand to purchase");
@@ -151,7 +155,32 @@ public class Core extends JavaPlugin implements Listener{
 					return;
 					
 				} else {
+					ItemStack heldStack = p.getItemInHand();
+					if (heldStack == null) {
+						this.getLogger().warning("Player " + p.getDisplayName() + "tried to sell itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
+						return;
+					}
 					
+					if (heldStack.getTypeId() != itemID) {
+						p.sendMessage("Wrong item in hand to sell");
+						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+						return;
+					}
+					
+					if (heldStack.getAmount() < priceSell) {
+						p.sendMessage("Not enough " + itemLine[0] + " in hand to purchase");
+						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong amount of " + itemLine[0] + " in hand  at " + xLoc + "," + yLoc + "," + zLoc);
+						return;
+					}
+					
+					if (heldStack.getAmount() == amountSell) {
+						p.getInventory().setItemInHand(null);
+					} else {
+						heldStack.setAmount(heldStack.getAmount() - amountSell);
+					}
+					p.getInventory().addItem(new ItemStack(CURRENCY, amountBuy));
+					p.sendMessage("Item Sold!");
+					return;
 				}
 			}
 			
