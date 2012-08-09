@@ -1,6 +1,8 @@
 package com.brandonmabey.goldshop;
 
 
+import java.util.HashMap;
+
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -47,6 +49,9 @@ public class Core extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent e) {
+		if (e.getClickedBlock() == null) {
+			return;
+		}
 		if (e.getClickedBlock().getType() == Material.SIGN_POST) {
 			Sign sign = (Sign) e.getClickedBlock().getState();
 			String lines[] = sign.getLines();
@@ -152,6 +157,8 @@ public class Core extends JavaPlugin implements Listener{
 					}
 					p.getInventory().addItem(new ItemStack(itemID, amountBuy));
 					p.sendMessage("Item purchased!");
+					this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
+					
 					return;
 					
 				} else {
@@ -161,25 +168,35 @@ public class Core extends JavaPlugin implements Listener{
 						return;
 					}
 					
-					if (heldStack.getTypeId() != itemID) {
+					if (heldStack.getType() != CURRENCY) {
 						p.sendMessage("Wrong item in hand to sell");
 						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
-					
-					if (heldStack.getAmount() < priceSell) {
-						p.sendMessage("Not enough " + itemLine[0] + " in hand to purchase");
-						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong amount of " + itemLine[0] + " in hand  at " + xLoc + "," + yLoc + "," + zLoc);
+						
+					HashMap<Integer, ? extends ItemStack> hm = p.getInventory().all(itemID);
+					for (int key : hm.keySet()) {
+						ItemStack inventoryItem = p.getInventory().getItem(key);
+						
+						if (inventoryItem.getAmount() < amountSell) {
+							continue;
+						}
+						
+						if (inventoryItem.getAmount() == amountSell) {
+							p.getInventory().setItem(key, null);
+						} else {
+							inventoryItem.setAmount(inventoryItem.getAmount() - amountSell);
+						}
+						
+
+						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
+						p.sendMessage("Item Sold!");
+						this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
 						return;
 					}
 					
-					if (heldStack.getAmount() == amountSell) {
-						p.getInventory().setItemInHand(null);
-					} else {
-						heldStack.setAmount(heldStack.getAmount() - amountSell);
-					}
-					p.getInventory().addItem(new ItemStack(CURRENCY, amountBuy));
-					p.sendMessage("Item Sold!");
+					
+					this.getLogger().info("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
 			}
