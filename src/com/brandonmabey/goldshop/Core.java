@@ -2,6 +2,7 @@ package com.brandonmabey.goldshop;
 
 
 import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -44,7 +45,29 @@ public class Core extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onPlayerClick(PlayerInteractEvent e) {
 		if (e.getClickedBlock().getType() == Material.SIGN_POST) {
-			this.getLogger().warning("You have clicked a sign");
+			Sign sign = (Sign) e.getClickedBlock().getState();
+			String lines[] = sign.getLines();
+			
+			this.getLogger().info(lines[0]);
+			
+			if (lines[0].equalsIgnoreCase("[gold]")) {
+				this.getLogger().info("Recognized as gold shop.");
+				int xLoc = e.getClickedBlock().getX();
+				int yLoc = e.getClickedBlock().getY();
+				int zLoc = e.getClickedBlock().getZ();
+				
+				String itemLine[] = lines[1].split(";");
+				if (itemLine.length != 2) {
+					this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
+					return;
+				}
+				this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemLine[1] + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
+				
+				
+				
+			}
+			
+			
 		}
 	}
 

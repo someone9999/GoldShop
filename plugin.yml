@@ -1,6 +1,6 @@
 name: GoldShop
 main: com.brandonmabey.goldshop.Core
-version: 0.0.2
+version: 0.0.3
 description: >
              A gold shop plugin.
 commands:
