@@ -33,15 +33,7 @@ public class Core extends JavaPlugin implements Listener{
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		Player player = null;
-		if (sender instanceof Player) {
-			player = (Player) sender;
-			if (command.getName().equalsIgnoreCase("lol")) {
-				player.getInventory().addItem(new ItemStack(50,1));
-				return true;
-			}
-		}
-		return false;
+		return super.onCommand(sender, command, label, args);
 	}
 
 	public static void main(String args[]) {
