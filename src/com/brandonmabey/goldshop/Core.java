@@ -4,6 +4,7 @@ package com.brandonmabey.goldshop;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
@@ -152,7 +153,7 @@ public class Core extends JavaPlugin implements Listener{
 						p.getInventory().setItemInHand(heldStack);
 					}
 					p.getInventory().addItem(new ItemStack(itemID, amountBuy));
-					p.sendMessage("Item purchased!");
+					p.sendMessage(ChatColor.GREEN + "Purchased " + ChatColor.YELLOW + itemLine[0] + ChatColor.GREEN + "!");
 					p.updateInventory();
 					this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
 					
@@ -172,7 +173,7 @@ public class Core extends JavaPlugin implements Listener{
 					}
 						
 					if (getItemIDWithAmount(itemID, amountSell, p)) {
-						p.sendMessage("Sold " + itemLine[0] + "!");
+						p.sendMessage(ChatColor.RED + "Sold " + ChatColor.YELLOW + itemLine[0] + ChatColor.RED + "!");
 						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
 						p.updateInventory();
 						this.getLogger().info("Player " + p.getDisplayName() + " sold " + itemLine[0]);
