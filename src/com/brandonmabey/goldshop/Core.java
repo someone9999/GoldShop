@@ -15,12 +15,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class Core extends JavaPlugin implements Listener{
 
 	public static Material CURRENCY = Material.GOLD_INGOT;
+	public static final String CURRENCY_NAME = "Gold Ingot";
 	
 	@Override
 	public void onEnable() {
@@ -129,24 +131,25 @@ public class Core extends JavaPlugin implements Listener{
 				Player p = e.getPlayer();
 				if (leftClick) {
 					ItemStack heldStack = p.getInventory().getItemInHand();
-					if (heldStack == null) {
+					if (priceBuy != 0 && heldStack == null) {
+						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
 						this.getLogger().warning("Player " + p.getDisplayName() + "tried to purchase itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (heldStack.getType() != CURRENCY) {
-						p.sendMessage("Wrong item in hand to purchase");
+					if (priceBuy != 0 && heldStack.getType() != CURRENCY) {
+						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
 						this.getLogger().info("Player " + p.getDisplayName() + "tried to purchase with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (heldStack.getAmount() < priceBuy) {
-						p.sendMessage("Not enough gold in hand to purchase");
+					if (priceBuy != 0 && heldStack.getAmount() < priceBuy) {
+						p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW + CURRENCY_NAME + "s " + ChatColor.GRAY + "to buy. You need " + ChatColor.WHITE + priceBuy + ChatColor.GRAY + ".");
 						this.getLogger().info("Player " + p.getDisplayName() + "tried to purchase with wrong amount of currency in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (heldStack.getAmount() == priceBuy) {
+					if (priceBuy != 0 && heldStack.getAmount() == priceBuy) {
 						p.getInventory().setItemInHand(null);
 					} else {
 						heldStack.setAmount(heldStack.getAmount() - priceBuy);
@@ -161,13 +164,9 @@ public class Core extends JavaPlugin implements Listener{
 					
 				} else {
 					ItemStack heldStack = p.getItemInHand();
-					if (heldStack == null) {
-						this.getLogger().warning("Player " + p.getDisplayName() + "tried to sell itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
-						return;
-					}
 					
-					if (heldStack.getType() != CURRENCY) {
-						p.sendMessage("Wrong item in hand to sell");
+					if (heldStack != null && heldStack.getTypeId() != 0 && heldStack.getType() != CURRENCY) {
+						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to Sell. Use a " + ChatColor.YELLOW + CURRENCY_NAME + ChatColor.GRAY + " or your " + ChatColor.YELLOW + "fists" + ChatColor.GRAY + ".");
 						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
@@ -180,7 +179,7 @@ public class Core extends JavaPlugin implements Listener{
 						return;
 					}
 					
-					p.sendMessage("Not enough " + itemLine[0] + " in inventory to sell");
+					p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW +  itemLine[0] + "(s)" + ChatColor.GRAY + " in inventory to sell. You need " + ChatColor.WHITE + amountSell + ChatColor.GRAY + ".");
 					this.getLogger().info("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
@@ -227,6 +226,26 @@ public class Core extends JavaPlugin implements Listener{
 			if (line.equalsIgnoreCase("[gold]")) {
 				e.setLine(0, "");
 				p.sendMessage("Need permission to create gold shop.");
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent e) {
+		if (e.getBlock().getType() != Material.SIGN_POST) {
+			this.getLogger().info("A block that is not a sign was destroyed at " + e.getBlock().getX() + "," + e.getBlock().getY() + "," + e.getBlock().getZ());
+			return;
+		}
+		
+		Sign sign = (Sign) e.getBlock().getState();
+		String lines[] = sign.getLines();
+		
+		if (lines[0].equalsIgnoreCase("[gold]")) {
+			if (!e.getPlayer().isOp()) {
+				e.getPlayer().sendMessage(ChatColor.RED + "You do not have permission to destroy a gold shop sign");
+				e.setCancelled(true);
+				} else {
+				e.getPlayer().sendMessage(ChatColor.GRAY + "Destroyed gold shop sign.");
 			}
 		}
 	}
