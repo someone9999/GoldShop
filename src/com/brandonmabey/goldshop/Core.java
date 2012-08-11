@@ -37,7 +37,8 @@ public class Core extends JavaPlugin implements Listener{
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		return super.onCommand(sender, command, label, args);
+		sender.sendMessage(getSyntaxMessage());
+		return true;
 	}
 
 	public static void main(String args[]) {
@@ -50,9 +51,9 @@ public class Core extends JavaPlugin implements Listener{
 		if (e.getClickedBlock() == null) {
 			return;
 		}
-		if (e.getClickedBlock().getType() == Material.SIGN_POST) {
+		if (e.getClickedBlock().getType() == Material.SIGN_POST || e.getClickedBlock().getType() == Material.WALL_SIGN) {
 			Sign sign = (Sign) e.getClickedBlock().getState();
-			String lines[] = sign.getLines();
+			String lines[] = stripColors(sign.getLines());
 			
 			
 			if (lines[0].equalsIgnoreCase("[gold]")) {
@@ -189,7 +190,7 @@ public class Core extends JavaPlugin implements Listener{
 	}
 	
 	public boolean verifySignText(String[] lines, int xLoc, int yLoc, int zLoc) {
-		
+		lines = stripColors(lines);
 		if (lines[0].equalsIgnoreCase("[gold]")) {
 			this.getLogger().info("Recognized as gold shop.");
 			
@@ -292,7 +293,7 @@ public class Core extends JavaPlugin implements Listener{
 	public void onSignChange(SignChangeEvent e) {
 		Player p = e.getPlayer();
 		
-		String lines[] = e.getLines();
+		String lines[] = stripColors(e.getLines());
 		
 		if (lines[0].equalsIgnoreCase("[gold]")) {
 			int x = e.getBlock().getX();
@@ -306,7 +307,7 @@ public class Core extends JavaPlugin implements Listener{
 			} else {
 				if (verifySignText(lines, x, y, z)) {
 					
-					//CHANGE THE SIGN COLOR TO GOLD OR SOMETHING
+					e.setLine(0, ChatColor.GOLD + lines[0]);
 					return;
 				} else {
 					p.sendMessage(ChatColor.RED + "Incorrect gold shop syntax.");
@@ -321,14 +322,18 @@ public class Core extends JavaPlugin implements Listener{
 	}
 	
 	private void sendSyntaxMessage(Player p) {
-		String[] message = {
+		
+		p.sendMessage(getSyntaxMessage());
+	}
+	
+	private String[] getSyntaxMessage() {
+		return new String[] {
 				ChatColor.GRAY + "Gold shop syntax must be as follows: ",
 				ChatColor.WHITE + "[gold]",
 				ChatColor.YELLOW + "<Block Name>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<Block ID>",
 				ChatColor.WHITE + "buy;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<price>" + ChatColor.WHITE + "g",
 				ChatColor.WHITE + "sell;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<payment>" + ChatColor.WHITE + "g"
 		};
-		p.sendMessage(message);
 	}
 	
 	private String getLocationString(int x, int y, int z) {
@@ -337,13 +342,13 @@ public class Core extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {
-		if (e.getBlock().getType() != Material.SIGN_POST) {
+		if (e.getBlock().getType() != Material.SIGN_POST && e.getBlock().getType() != Material.WALL_SIGN) {
 //			this.getLogger().info("A block that is not a sign was destroyed at " + e.getBlock().getX() + "," + e.getBlock().getY() + "," + e.getBlock().getZ());
 			return;
 		}
 		
 		Sign sign = (Sign) e.getBlock().getState();
-		String lines[] = sign.getLines();
+		String lines[] = stripColors(sign.getLines());
 		
 		if (lines[0].equalsIgnoreCase("[gold]")) {
 			if (!e.getPlayer().isOp()) {
@@ -353,6 +358,14 @@ public class Core extends JavaPlugin implements Listener{
 				e.getPlayer().sendMessage(ChatColor.GRAY + "Destroyed gold shop sign.");
 			}
 		}
+	}
+
+	private String[] stripColors(String[] lines) {
+		for (int i = 0; i < 4; i++) {
+			lines[i] = ChatColor.stripColor(lines[i]);
+		}
+		
+		return lines;
 	}
 
 

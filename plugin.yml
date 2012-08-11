@@ -4,4 +4,6 @@ version: 0.0.0.4
 description: >
              A gold shop plugin.
 commands:
-
+   goldshop:
+      description: Display help for the gold shop plugin.
+      usage: /goldshop
