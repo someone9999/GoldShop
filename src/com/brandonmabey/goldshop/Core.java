@@ -123,7 +123,7 @@ public class Core extends JavaPlugin implements Listener{
 					this.getLogger().warning("Purchase sign is selling 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
-				this.getLogger().info("Purchase sign is selling " + amountSell + " for " + priceSell + "gold");
+				this.getLogger().fine("Purchase sign is selling " + amountSell + " for " + priceSell + "gold");
 				
 				
 				
@@ -133,19 +133,19 @@ public class Core extends JavaPlugin implements Listener{
 					ItemStack heldStack = p.getInventory().getItemInHand();
 					if (priceBuy != 0 && heldStack == null) {
 						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
-						this.getLogger().warning("Player " + p.getDisplayName() + "tried to purchase itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
 					if (priceBuy != 0 && heldStack.getType() != CURRENCY) {
 						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
-						this.getLogger().info("Player " + p.getDisplayName() + "tried to purchase with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
 					if (priceBuy != 0 && heldStack.getAmount() < priceBuy) {
 						p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW + CURRENCY_NAME + "s " + ChatColor.GRAY + "to buy. You need " + ChatColor.WHITE + priceBuy + ChatColor.GRAY + ".");
-						this.getLogger().info("Player " + p.getDisplayName() + "tried to purchase with wrong amount of currency in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong amount of currency in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
@@ -158,7 +158,7 @@ public class Core extends JavaPlugin implements Listener{
 					p.getInventory().addItem(new ItemStack(itemID, amountBuy));
 					p.sendMessage(ChatColor.GREEN + "Purchased " + ChatColor.YELLOW + itemLine[0] + ChatColor.GREEN + "!");
 					p.updateInventory();
-					this.getLogger().info("Player " + p.getDisplayName() + "bought " + itemLine[0]);
+					this.getLogger().fine("Player " + p.getDisplayName() + "bought " + itemLine[0]);
 					
 					return;
 					
@@ -167,7 +167,7 @@ public class Core extends JavaPlugin implements Listener{
 					
 					if (heldStack != null && heldStack.getTypeId() != 0 && heldStack.getType() != CURRENCY) {
 						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to Sell. Use a " + ChatColor.YELLOW + CURRENCY_NAME + ChatColor.GRAY + " or your " + ChatColor.YELLOW + "fists" + ChatColor.GRAY + ".");
-						this.getLogger().info("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 						
@@ -175,12 +175,12 @@ public class Core extends JavaPlugin implements Listener{
 						p.sendMessage(ChatColor.RED + "Sold " + ChatColor.YELLOW + itemLine[0] + ChatColor.RED + "!");
 						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
 						p.updateInventory();
-						this.getLogger().info("Player " + p.getDisplayName() + " sold " + itemLine[0]);
+						this.getLogger().fine("Player " + p.getDisplayName() + " sold " + itemLine[0]);
 						return;
 					}
 					
 					p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW +  itemLine[0] + "(s)" + ChatColor.GRAY + " in inventory to sell. You need " + ChatColor.WHITE + amountSell + ChatColor.GRAY + ".");
-					this.getLogger().info("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
+					this.getLogger().fine("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
 			}
@@ -233,7 +233,7 @@ public class Core extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {
 		if (e.getBlock().getType() != Material.SIGN_POST) {
-			this.getLogger().info("A block that is not a sign was destroyed at " + e.getBlock().getX() + "," + e.getBlock().getY() + "," + e.getBlock().getZ());
+//			this.getLogger().info("A block that is not a sign was destroyed at " + e.getBlock().getX() + "," + e.getBlock().getY() + "," + e.getBlock().getZ());
 			return;
 		}
 		
