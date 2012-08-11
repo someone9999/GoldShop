@@ -62,110 +62,40 @@ public class Core extends JavaPlugin implements Listener{
 				int yLoc = e.getClickedBlock().getY();
 				int zLoc = e.getClickedBlock().getZ();
 				
-				String itemLine[] = lines[1].split(";");
-				if (itemLine.length != 2 && itemLine.length != 3) {
-					this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				
-				int itemID;
-				try {
-					itemID = Integer.valueOf(itemLine[1]);
-				} catch (Exception ex) {
-					this.getLogger().warning("Line 2 has bad syntax for purcahse sign at " + xLoc + ";" + yLoc + ";" + zLoc);
-					return;
-				}
-				this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemLine[1] + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
-				int metadata = 0;
-				if (itemLine.length == 3) {
-					try {
-						metadata = Integer.valueOf(itemLine[2]);
-					} catch (Exception ex) {
-						this.getLogger().warning("Line 2 had bad syntax for purchase sign at " + getLocationString(xLoc, yLoc, zLoc));
-					}
-				}
-				
-				
-				
-				String buyLine[] = lines[2].split(";");
-				if (buyLine.length != 3) {
-					this.getLogger().warning("Purchase sign has incorrect number of arguments on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				
-				int amountBuy;
-				int priceBuy;
-				try {
-					amountBuy = Integer.valueOf(buyLine[1]);
-					priceBuy = Integer.valueOf(buyLine[2].substring(0, buyLine[2].length() - 1));
-				} catch (Exception ex) {
-					this.getLogger().warning("Purchase sign has bad syntax on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				
-				if (amountBuy == 0 && priceBuy != 0) {
-					this.getLogger().warning("Purchase sign is buying 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				this.getLogger().info("Purchase sign is " + amountBuy + " for " + priceBuy + "gold");
-				
-				
-				String sellLine[] = lines[3].split(";");
-				if (sellLine.length != 3) {
-					this.getLogger().warning("Purchase sign has incorrect number of arguments on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				
-				int amountSell;
-				int priceSell;
-				try {
-					amountSell = Integer.valueOf(sellLine[1]);
-					priceSell = Integer.valueOf(sellLine[2].substring(0, sellLine[2].length() - 1));
-				} catch (Exception ex) {
-					this.getLogger().warning("Purchase sign has bad syntax on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				
-				if (amountBuy == 0 && priceBuy != 0) {
-					this.getLogger().warning("Purchase sign is selling 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
-					return;
-				}
-				this.getLogger().fine("Purchase sign is selling " + amountSell + " for " + priceSell + "gold");
-				
-				
+				GoldShopSignData signData = verifySignText(lines, xLoc, yLoc, zLoc);
 				
 				boolean leftClick = (e.getAction() == Action.LEFT_CLICK_BLOCK); //buy
 				Player p = e.getPlayer();
 				if (leftClick) {
 					ItemStack heldStack = p.getInventory().getItemInHand();
-					if (priceBuy != 0 && heldStack == null) {
-						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
+					if (signData.buyPrice != 0 && heldStack == null) {
+						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + signData.buyPrice + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
 						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase itemLine[0] with nothing in hand at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (priceBuy != 0 && heldStack.getType() != CURRENCY) {
-						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + priceBuy + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
-						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+					if (signData.buyPrice != 0 && heldStack.getType() != CURRENCY) {
+						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to purchase. Use " + ChatColor.WHITE + signData.buyPrice + " " + ChatColor.YELLOW + CURRENCY_NAME + "(s)" + ChatColor.GRAY + ".");
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong item in hand" + signData.blockName + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (priceBuy != 0 && heldStack.getAmount() < priceBuy) {
-						p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW + CURRENCY_NAME + "s " + ChatColor.GRAY + "to buy. You need " + ChatColor.WHITE + priceBuy + ChatColor.GRAY + ".");
-						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong amount of currency in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+					if (signData.buyPrice != 0 && heldStack.getAmount() < signData.buyPrice) {
+						p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW + CURRENCY_NAME + "s " + ChatColor.GRAY + "to buy. You need " + ChatColor.WHITE + signData.buyPrice + ChatColor.GRAY + ".");
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to purchase with wrong amount of currency in hand" + signData.blockName + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 					
-					if (priceBuy != 0 && heldStack.getAmount() == priceBuy) {
+					if (signData.buyPrice != 0 && heldStack.getAmount() == signData.buyPrice) {
 						p.getInventory().setItemInHand(null);
 					} else {
-						heldStack.setAmount(heldStack.getAmount() - priceBuy);
+						heldStack.setAmount(heldStack.getAmount() - signData.buyPrice);
 						p.getInventory().setItemInHand(heldStack);
 					}
-					p.getInventory().addItem(new ItemStack(itemID, amountBuy, (short) metadata));
-					p.sendMessage(ChatColor.GREEN + "Purchased " + ChatColor.YELLOW + itemLine[0] + ChatColor.GREEN + "!");
+					p.getInventory().addItem(new ItemStack(signData.blockID, signData.buyAmount, (short) signData.blockMetadata));
+					p.sendMessage(ChatColor.GREEN + "Purchased " + ChatColor.YELLOW + signData.blockName + ChatColor.GREEN + "!");
 					p.updateInventory();
-					this.getLogger().fine("Player " + p.getDisplayName() + "bought " + itemLine[0]);
+					this.getLogger().fine("Player " + p.getDisplayName() + "bought " + signData.blockName);
 					
 					return;
 					
@@ -174,19 +104,19 @@ public class Core extends JavaPlugin implements Listener{
 					
 					if (heldStack != null && heldStack.getTypeId() != 0 && heldStack.getType() != CURRENCY) {
 						p.sendMessage(ChatColor.GRAY + "Wrong item in hand to Sell. Use a " + ChatColor.YELLOW + CURRENCY_NAME + ChatColor.GRAY + " or your " + ChatColor.YELLOW + "fists" + ChatColor.GRAY + ".");
-						this.getLogger().fine("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + itemLine[0] + " at " + xLoc + "," + yLoc + "," + zLoc);
+						this.getLogger().fine("Player " + p.getDisplayName() + "tried to sell with wrong item in hand" + signData.blockName + " at " + xLoc + "," + yLoc + "," + zLoc);
 						return;
 					}
 						
-					if (getItemIDWithAmount(itemID, amountSell, metadata, (itemLine.length == 3), p)) {
-						p.sendMessage(ChatColor.RED + "Sold " + ChatColor.YELLOW + itemLine[0] + ChatColor.RED + "!");
-						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
+					if (getItemIDWithAmount(signData.blockID, signData.sellAmount, signData.blockMetadata, signData.blockMetadataMatters, p)) {
+						p.sendMessage(ChatColor.RED + "Sold " + ChatColor.YELLOW + signData.blockName + ChatColor.RED + "!");
+						p.getInventory().addItem(new ItemStack(CURRENCY, signData.sellPrice));
 						p.updateInventory();
-						this.getLogger().fine("Player " + p.getDisplayName() + " sold " + itemLine[0]);
+						this.getLogger().fine("Player " + p.getDisplayName() + " sold " + signData.blockName);
 						return;
 					}
 					
-					p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW +  itemLine[0] + "(s)" + ChatColor.GRAY + " in inventory to sell. You need " + ChatColor.WHITE + amountSell + ChatColor.GRAY + ".");
+					p.sendMessage(ChatColor.GRAY + "Not enough " + ChatColor.YELLOW +  signData.blockName + "(s)" + ChatColor.GRAY + " in inventory to sell. You need " + ChatColor.WHITE + signData.sellAmount + ChatColor.GRAY + ".");
 					this.getLogger().fine("Player " + p.getDisplayName() + " tried to sell with not enough items in inventory at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
@@ -196,7 +126,7 @@ public class Core extends JavaPlugin implements Listener{
 		}
 	}
 	
-	public boolean verifySignText(String[] lines, int xLoc, int yLoc, int zLoc) {
+	public GoldShopSignData verifySignText(String[] lines, int xLoc, int yLoc, int zLoc) {
 		lines = stripColors(lines);
 		if (lines[0].equalsIgnoreCase("[gold]")) {
 			this.getLogger().info("Recognized as gold shop.");
@@ -204,22 +134,26 @@ public class Core extends JavaPlugin implements Listener{
 			String itemLine[] = lines[1].split(";");
 			if (itemLine.length != 2 && itemLine.length != 3) {
 				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
-			
+			int blockID;
 			try {
-				Integer.valueOf(itemLine[1]);
+				blockID = Integer.valueOf(itemLine[1]);
 			} catch (Exception ex) {
 				this.getLogger().warning("Line 2 has bad syntax for purcahse sign at " + xLoc + ";" + yLoc + ";" + zLoc);
-				return false;
+				return null;
 			}
 			this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemLine[1] + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
+			
+			int metadata = 0;
+			boolean metadataMatters = false;
 			if (itemLine.length == 3) {
 				try {
-					Integer.valueOf(itemLine[2]);
+					metadata = Integer.valueOf(itemLine[2]);
+					metadataMatters = true;
 				} catch (Exception ex) {
 					this.getLogger().warning("Line 2 had bad syntax for purchase sign at " + getLocationString(xLoc, yLoc, zLoc));
-					return false;
+					return null;
 				}
 			}
 			
@@ -229,7 +163,7 @@ public class Core extends JavaPlugin implements Listener{
 			String buyLine[] = lines[2].split(";");
 			if (buyLine.length != 3) {
 				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			
 			int amountBuy;
@@ -239,12 +173,12 @@ public class Core extends JavaPlugin implements Listener{
 				priceBuy = Integer.valueOf(buyLine[2].substring(0, buyLine[2].length() - 1));
 			} catch (Exception ex) {
 				this.getLogger().warning("Purchase sign has bad syntax on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			
 			if (amountBuy == 0 && priceBuy != 0) {
 				this.getLogger().warning("Purchase sign is buying 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			this.getLogger().info("Purchase sign is " + amountBuy + " for " + priceBuy + "gold");
 			
@@ -252,7 +186,7 @@ public class Core extends JavaPlugin implements Listener{
 			String sellLine[] = lines[3].split(";");
 			if (sellLine.length != 3) {
 				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			
 			int amountSell;
@@ -262,18 +196,20 @@ public class Core extends JavaPlugin implements Listener{
 				priceSell = Integer.valueOf(sellLine[2].substring(0, sellLine[2].length() - 1));
 			} catch (Exception ex) {
 				this.getLogger().warning("Purchase sign has bad syntax on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			
 			if (amountBuy == 0 && priceBuy != 0) {
 				this.getLogger().warning("Purchase sign is selling 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
-				return false;
+				return null;
 			}
 			this.getLogger().fine("Purchase sign is selling " + amountSell + " for " + priceSell + "gold");
-			return true;
+			
+			
+			return new GoldShopSignData(itemLine[0], blockID, metadata, metadataMatters, amountBuy, priceBuy, amountSell, priceSell);
 			
 		} else {
-			return false;
+			return null;
 		}
 	}
 	
@@ -323,7 +259,7 @@ public class Core extends JavaPlugin implements Listener{
 				this.getLogger().info(p.getDisplayName() + " tried to create a gold shop without permission at " + getLocationString(x,y,z));
 				e.setLine(0, "");
 			} else {
-				if (verifySignText(lines, x, y, z)) {
+				if (verifySignText(lines, x, y, z) != null) {
 					
 					e.setLine(0, ChatColor.GOLD + lines[0]);
 					return;
