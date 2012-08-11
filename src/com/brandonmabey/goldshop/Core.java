@@ -54,7 +54,6 @@ public class Core extends JavaPlugin implements Listener{
 			Sign sign = (Sign) e.getClickedBlock().getState();
 			String lines[] = sign.getLines();
 			
-			this.getLogger().info(lines[0]);
 			
 			if (lines[0].equalsIgnoreCase("[gold]")) {
 				this.getLogger().info("Recognized as gold shop.");
@@ -189,6 +188,80 @@ public class Core extends JavaPlugin implements Listener{
 		}
 	}
 	
+	public boolean verifySignText(String[] lines, int xLoc, int yLoc, int zLoc) {
+		
+		if (lines[0].equalsIgnoreCase("[gold]")) {
+			this.getLogger().info("Recognized as gold shop.");
+			
+			String itemLine[] = lines[1].split(";");
+			if (itemLine.length != 2) {
+				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			
+			int itemID;
+			try {
+				itemID = Integer.valueOf(itemLine[1]);
+			} catch (Exception ex) {
+				this.getLogger().warning("Line 2 has bad syntax for purcahse sign at " + xLoc + ";" + yLoc + ";" + zLoc);
+				return false;
+			}
+			this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemID + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
+			
+			
+			
+			
+			String buyLine[] = lines[2].split(";");
+			if (buyLine.length != 3) {
+				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			
+			int amountBuy;
+			int priceBuy;
+			try {
+				amountBuy = Integer.valueOf(buyLine[1]);
+				priceBuy = Integer.valueOf(buyLine[2].substring(0, buyLine[2].length() - 1));
+			} catch (Exception ex) {
+				this.getLogger().warning("Purchase sign has bad syntax on line 3 at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			
+			if (amountBuy == 0 && priceBuy != 0) {
+				this.getLogger().warning("Purchase sign is buying 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			this.getLogger().info("Purchase sign is " + amountBuy + " for " + priceBuy + "gold");
+			
+			
+			String sellLine[] = lines[3].split(";");
+			if (sellLine.length != 3) {
+				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			
+			int amountSell;
+			int priceSell;
+			try {
+				amountSell = Integer.valueOf(sellLine[1]);
+				priceSell = Integer.valueOf(sellLine[2].substring(0, sellLine[2].length() - 1));
+			} catch (Exception ex) {
+				this.getLogger().warning("Purchase sign has bad syntax on line 4 at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			
+			if (amountBuy == 0 && priceBuy != 0) {
+				this.getLogger().warning("Purchase sign is selling 0 items for a price at " + xLoc + "," + yLoc + "," + zLoc);
+				return false;
+			}
+			this.getLogger().fine("Purchase sign is selling " + amountSell + " for " + priceSell + "gold");
+			return true;
+			
+		} else {
+			return false;
+		}
+	}
+	
 	public boolean getItemIDWithAmount(int ID, int amount, Player p) {
 		ArrayList<Integer> spots = new ArrayList<Integer>();
 		
@@ -219,15 +292,47 @@ public class Core extends JavaPlugin implements Listener{
 	public void onSignChange(SignChangeEvent e) {
 		Player p = e.getPlayer();
 		
-		if (p.isOp()) {
-			return;
-		} else {
-			String line = e.getLine(0);
-			if (line.equalsIgnoreCase("[gold]")) {
+		String lines[] = e.getLines();
+		
+		if (lines[0].equalsIgnoreCase("[gold]")) {
+			int x = e.getBlock().getX();
+			int y = e.getBlock().getY();
+			int z = e.getBlock().getZ();
+			
+			if (!p.isOp()) {
+				p.sendMessage(ChatColor.RED + "You do not have permission to create a gold shop sign.");
+				this.getLogger().info(p.getDisplayName() + " tried to create a gold shop without permission at " + getLocationString(x,y,z));
 				e.setLine(0, "");
-				p.sendMessage(ChatColor.RED + "You do not have permission to create a gold shop.");
+			} else {
+				if (verifySignText(lines, x, y, z)) {
+					
+					//CHANGE THE SIGN COLOR TO GOLD OR SOMETHING
+					return;
+				} else {
+					p.sendMessage(ChatColor.RED + "Incorrect gold shop syntax.");
+					sendSyntaxMessage(p);
+					e.setLine(0,"");
+					e.setLine(1, "");
+					e.setLine(2, "");
+					e.setLine(3, "");
+				}
 			}
 		}
+	}
+	
+	private void sendSyntaxMessage(Player p) {
+		String[] message = {
+				ChatColor.GRAY + "Gold shop syntax must be as follows: ",
+				ChatColor.WHITE + "[gold]",
+				ChatColor.YELLOW + "<Block Name>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<Block ID>",
+				ChatColor.WHITE + "buy;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<price>" + ChatColor.WHITE + "g",
+				ChatColor.WHITE + "sell;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<payment>" + ChatColor.WHITE + "g"
+		};
+		p.sendMessage(message);
+	}
+	
+	private String getLocationString(int x, int y, int z) {
+		return x + "," + y + "," + z;
 	}
 	
 	@EventHandler
