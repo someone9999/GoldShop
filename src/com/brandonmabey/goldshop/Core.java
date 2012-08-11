@@ -63,7 +63,7 @@ public class Core extends JavaPlugin implements Listener{
 				int zLoc = e.getClickedBlock().getZ();
 				
 				String itemLine[] = lines[1].split(";");
-				if (itemLine.length != 2) {
+				if (itemLine.length != 2 && itemLine.length != 3) {
 					this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
 					return;
 				}
@@ -76,7 +76,14 @@ public class Core extends JavaPlugin implements Listener{
 					return;
 				}
 				this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemLine[1] + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
-				
+				int metadata = 0;
+				if (itemLine.length == 3) {
+					try {
+						metadata = Integer.valueOf(itemLine[2]);
+					} catch (Exception ex) {
+						this.getLogger().warning("Line 2 had bad syntax for purchase sign at " + getLocationString(xLoc, yLoc, zLoc));
+					}
+				}
 				
 				
 				
@@ -155,7 +162,7 @@ public class Core extends JavaPlugin implements Listener{
 						heldStack.setAmount(heldStack.getAmount() - priceBuy);
 						p.getInventory().setItemInHand(heldStack);
 					}
-					p.getInventory().addItem(new ItemStack(itemID, amountBuy));
+					p.getInventory().addItem(new ItemStack(itemID, amountBuy, (short) metadata));
 					p.sendMessage(ChatColor.GREEN + "Purchased " + ChatColor.YELLOW + itemLine[0] + ChatColor.GREEN + "!");
 					p.updateInventory();
 					this.getLogger().fine("Player " + p.getDisplayName() + "bought " + itemLine[0]);
@@ -171,7 +178,7 @@ public class Core extends JavaPlugin implements Listener{
 						return;
 					}
 						
-					if (getItemIDWithAmount(itemID, amountSell, p)) {
+					if (getItemIDWithAmount(itemID, amountSell, metadata, (itemLine.length == 3), p)) {
 						p.sendMessage(ChatColor.RED + "Sold " + ChatColor.YELLOW + itemLine[0] + ChatColor.RED + "!");
 						p.getInventory().addItem(new ItemStack(CURRENCY, priceSell));
 						p.updateInventory();
@@ -195,19 +202,26 @@ public class Core extends JavaPlugin implements Listener{
 			this.getLogger().info("Recognized as gold shop.");
 			
 			String itemLine[] = lines[1].split(";");
-			if (itemLine.length != 2) {
+			if (itemLine.length != 2 && itemLine.length != 3) {
 				this.getLogger().warning("Purchase sign has incorrect number of arguments on line 2 at " + xLoc + "," + yLoc + "," + zLoc);
 				return false;
 			}
 			
-			int itemID;
 			try {
-				itemID = Integer.valueOf(itemLine[1]);
+				Integer.valueOf(itemLine[1]);
 			} catch (Exception ex) {
 				this.getLogger().warning("Line 2 has bad syntax for purcahse sign at " + xLoc + ";" + yLoc + ";" + zLoc);
 				return false;
 			}
-			this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemID + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
+			this.getLogger().info("Item Name: " + itemLine[0] + " Item ID: " + itemLine[1] + " is selected at " + xLoc + "," + yLoc + "," + zLoc);
+			if (itemLine.length == 3) {
+				try {
+					Integer.valueOf(itemLine[2]);
+				} catch (Exception ex) {
+					this.getLogger().warning("Line 2 had bad syntax for purchase sign at " + getLocationString(xLoc, yLoc, zLoc));
+					return false;
+				}
+			}
 			
 			
 			
@@ -263,11 +277,15 @@ public class Core extends JavaPlugin implements Listener{
 		}
 	}
 	
-	public boolean getItemIDWithAmount(int ID, int amount, Player p) {
+	public boolean getItemIDWithAmount(int ID, int amount, int metadata, boolean metadataMatters, Player p) {
 		ArrayList<Integer> spots = new ArrayList<Integer>();
 		
 		HashMap<Integer, ? extends ItemStack> hm = p.getInventory().all(ID);
 		for (int slotID : hm.keySet()) {
+			if (metadataMatters && hm.get(slotID).getData().getData() != metadata) {
+				continue;
+			}
+			
 			if (hm.get(slotID).getAmount() < amount) {
 				amount -= hm.get(slotID).getAmount();
 				spots.add(slotID);
@@ -329,8 +347,11 @@ public class Core extends JavaPlugin implements Listener{
 	private String[] getSyntaxMessage() {
 		return new String[] {
 				ChatColor.GRAY + "Gold shop syntax must be as follows: ",
+				ChatColor.GRAY + "Anything in red [] brackets is optional.",
+				ChatColor.GRAY + "Anything in white is non-variable text.",
+				ChatColor.GRAY + "Anything in yellow is variable text.",
 				ChatColor.WHITE + "[gold]",
-				ChatColor.YELLOW + "<Block Name>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<Block ID>",
+				ChatColor.YELLOW + "<Block Name>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<Block ID>" + ChatColor.RED + "[" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<metadata>" + ChatColor.RED + "]",
 				ChatColor.WHITE + "buy;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<price>" + ChatColor.WHITE + "g",
 				ChatColor.WHITE + "sell;" + ChatColor.YELLOW + "<amount>" + ChatColor.WHITE + ";" + ChatColor.YELLOW + "<payment>" + ChatColor.WHITE + "g"
 		};
