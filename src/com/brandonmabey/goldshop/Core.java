@@ -225,7 +225,7 @@ public class Core extends JavaPlugin implements Listener{
 			String line = e.getLine(0);
 			if (line.equalsIgnoreCase("[gold]")) {
 				e.setLine(0, "");
-				p.sendMessage("Need permission to create gold shop.");
+				p.sendMessage(ChatColor.RED + "You do not have permission to create a gold shop.");
 			}
 		}
 	}
